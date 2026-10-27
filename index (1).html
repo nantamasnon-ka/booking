@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a Maintenance Visit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3f5f2;
+      --card: #ffffff;
+      --ink: #17201c;
+      --muted: #5f6b65;
+      --line: #dde3df;
+      --accent: #0f6e5c;
+      --accent-soft: #e2f0eb;
+      --accent-ink: #ffffff;
+      --off: #eef0ee;
+      --off-ink: #a3aca7;
+      --ok: #1d7a4b;
+      --err: #b3261e;
+      --radius: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111614;
+        --card: #19201d;
+        --ink: #eef2ef;
+        --muted: #9aa7a0;
+        --line: #2c3631;
+        --accent: #3fb594;
+        --accent-soft: #1d3a31;
+        --accent-ink: #0b1411;
+        --off: #1f2724;
+        --off-ink: #56625c;
+        --ok: #5cc28f;
+        --err: #f08a82;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; line-height: 1.5; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 40px 16px 64px; }
+    header { margin-bottom: 28px; }
+    .brand { font-weight: 700; font-size: 15px; color: var(--accent); }
+    h1 { font-size: clamp(26px, 6vw, 36px); line-height: 1.15; margin: 8px 0 10px; }
+    .lede { color: var(--muted); margin: 0; }
+
+    .step { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+    .step h2 { font-size: 16px; margin: 0 0 4px; display: flex; gap: 10px; align-items: center; }
+    .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; }
+    .hint { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+
+    .services { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .services { grid-template-columns: 1fr; } }
+    .choice {
+      font: inherit; color: inherit; text-align: left; cursor: pointer;
+      background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    }
+    .choice strong { display: block; font-size: 15px; }
+    .choice span { font-size: 13px; color: var(--muted); }
+    .choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+    .dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
+    .date {
+      flex: 0 0 72px; scroll-snap-align: start; font: inherit; color: inherit; cursor: pointer;
+      background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 4px; text-align: center;
+    }
+    .date .dow { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .date .day { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .date .mon { font-size: 12px; color: var(--muted); }
+    .date .tag { font-size: 11px; margin-top: 2px; color: var(--off-ink); min-height: 16px; }
+    .date[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+    .date[aria-pressed="true"] .dow, .date[aria-pressed="true"] .mon { color: var(--accent-ink); }
+    .date:disabled { background: var(--off); color: var(--off-ink); cursor: not-allowed; border-color: transparent; }
+    .date:disabled .dow, .date:disabled .mon { color: var(--off-ink); }
+
+    .times { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .time { font: inherit; color: inherit; cursor: pointer; background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px; text-align: center; }
+    .time strong { display: block; font-size: 15px; }
+    .time span { font-size: 12px; color: var(--muted); }
+    .time[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+    .time:disabled { background: var(--off); color: var(--off-ink); cursor: not-allowed; border-color: transparent; }
+    .time:disabled span { color: var(--off-ink); }
+    .empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
+
+    form { display: grid; gap: 14px; }
+    label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+    input, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+    input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    textarea { min-height: 80px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+    .consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; color: var(--muted); }
+    .consent input { width: auto; margin-top: 4px; }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    .summary { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+    .summary.incomplete { background: var(--off); color: var(--muted); }
+    .submit { font: inherit; font-weight: 600; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 14px 16px; cursor: pointer; }
+    .submit:disabled { opacity: .55; cursor: not-allowed; }
+    .msg { font-size: 14px; min-height: 20px; margin: 0; }
+    .msg.err { color: var(--err); }
+
+    .done { text-align: center; padding: 32px 20px; }
+    .done .check { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin: 0 auto 14px; font-size: 28px; font-weight: 700; }
+    .done h2 { justify-content: center; font-size: 22px; margin-bottom: 6px; }
+    .ref { font-size: 13px; color: var(--muted); }
+    .ref strong { display: block; font-size: 22px; color: var(--ink); letter-spacing: .06em; margin-top: 2px; }
+    .done dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; text-align: left; max-width: 340px; margin: 20px auto; font-size: 14px; }
+    .done dt { color: var(--muted); }
+    .done dd { margin: 0; font-weight: 500; }
+    .link { font: inherit; background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; }
+    .demo { font-size: 12px; color: var(--muted); text-align: center; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">Neat &amp; Fix Maintenance</div>
+      <h1>Book a maintenance visit</h1>
+      <p class="lede">Choose a service and a time that suits you. Our technician comes to your home; we'll call the day before to confirm.</p>
+    </header>
+
+    <div id="bookingFlow">
+      <section class="step">
+        <h2><span class="num">1</span>Choose a service</h2>
+        <p class="hint">Not sure? Pick General repair and describe the problem in step 4.</p>
+        <div class="services" id="services"></div>
+      </section>
+
+      <section class="step">
+        <h2><span class="num">2</span>Choose a date</h2>
+        <p class="hint">Open Monday to Saturday. Swipe for more dates.</p>
+        <div class="dates" id="dates"><p class="empty">Loading available dates…</p></div>
+      </section>
+
+      <section class="step">
+        <h2><span class="num">3</span>Choose a time</h2>
+        <p class="hint">Each visit is a 2-hour arrival window.</p>
+        <div class="times" id="times"><p class="empty">Pick a date first.</p></div>
+      </section>
+
+      <section class="step">
+        <h2><span class="num">4</span>Your details</h2>
+        <p class="hint">So the technician can find you and call ahead.</p>
+        <form id="bookForm" novalidate>
+          <div class="row">
+            <label>Full name
+              <input name="name" required maxlength="100" autocomplete="name">
+            </label>
+            <label>Phone
+              <input name="phone" type="tel" required maxlength="20" autocomplete="tel" placeholder="08x xxx xxxx">
+            </label>
+          </div>
+          <label>Email (optional, for a confirmation email)
+            <input name="email" type="email" maxlength="150" autocomplete="email">
+          </label>
+          <label>Address
+            <textarea name="address" required maxlength="400" autocomplete="street-address" placeholder="House number, building, street, district"></textarea>
+          </label>
+          <label>What needs fixing? (optional)
+            <textarea name="details" maxlength="800" placeholder="For example: bedroom air-con is leaking water"></textarea>
+          </label>
+
+          <label class="hp" aria-hidden="true">Website
+            <input name="website" tabindex="-1" autocomplete="off">
+          </label>
+
+          <label class="consent">
+            <input type="checkbox" name="consent" required>
+            <span>I agree that my details are stored to arrange and carry out this service.</span>
+          </label>
+
+          <div class="summary incomplete" id="summary">Choose a service, date and time above.</div>
+          <button class="submit" type="submit" id="submitBtn" disabled>Confirm booking</button>
+          <p class="msg" id="msg" role="status"></p>
+        </form>
+      </section>
+    </div>
+
+    <section class="step done" id="done" hidden>
+      <div class="check">✓</div>
+      <h2>You're booked</h2>
+      <p class="hint">We'll call you the day before to confirm. Keep your booking reference.</p>
+      <div class="ref">Booking reference<strong id="doneRef"></strong></div>
+      <dl id="doneDetails"></dl>
+      <button class="link" id="again">Book another visit</button>
+    </section>
+
+    <p class="demo" id="demoNote" hidden>Demo mode: no backend connected yet, so bookings aren't saved and availability is made up.</p>
+  </main>
+
+  <script>
+    // Paste your Apps Script Web App URL here after deploying (see the setup guide).
+    const SCRIPT_URL = "";
+
+    // Must match SERVICES in Code.gs exactly.
+    const SERVICES = [
+      { name: "Air conditioner cleaning", desc: "Full wash, filter clean, gas check" },
+      { name: "Plumbing", desc: "Leaks, blocked drains, taps, toilets" },
+      { name: "Electrical", desc: "Sockets, lights, breakers, wiring" },
+      { name: "General repair", desc: "Doors, fixtures, anything else" }
+    ];
+
+    const demo = !SCRIPT_URL;
+    const state = { service: null, date: null, time: null, days: [] };
+    const $ = (id) => document.getElementById(id);
+
+    // ---------- formatting ----------
+    function dateParts(ymd) {
+      const d = new Date(ymd + "T00:00:00Z");
+      const f = (o) => new Intl.DateTimeFormat("en-GB", Object.assign({ timeZone: "UTC" }, o)).format(d);
+      return { dow: f({ weekday: "short" }), day: f({ day: "numeric" }), mon: f({ month: "short" }), long: f({ weekday: "short", day: "numeric", month: "short", year: "numeric" }) };
+    }
+    const slotLabel = (s) => s.start + "–" + s.end;
+    const currentDay = () => state.days.find(d => d.date === state.date);
+    const currentSlot = () => { const d = currentDay(); return d && d.slots.find(s => s.start === state.time); };
+
+    // ---------- demo availability (mirrors Code.gs rules) ----------
+    function demoDays() {
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+      const base = Date.parse(today + "T00:00:00Z");
+      const slots = [["09:00", "11:00"], ["11:00", "13:00"], ["13:00", "15:00"], ["15:00", "17:00"]];
+      const days = [];
+      for (let i = 1; i <= 30; i++) {
+        const d = new Date(base + i * 86400000);
+        const open = d.getUTCDay() !== 0;
+        days.push({
+          date: d.toISOString().slice(0, 10),
+          open,
+          slots: open ? slots.map(([start, end]) => ({ start, end, left: Math.random() < 0.3 ? 0 : 1 })) : []
+        });
+      }
+      return days;
+    }
+
+    async function loadAvailability() {
+      if (demo) {
+        if (!state.days.length) state.days = demoDays();
+        return;
+      }
+      const res = await fetch(SCRIPT_URL);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Could not load availability");
+      state.days = data.days;
+    }
+
+    // ---------- rendering ----------
+    function renderServices() {
+      const box = $("services");
+      box.innerHTML = "";
+      SERVICES.forEach(s => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "choice";
+        b.setAttribute("aria-pressed", state.service === s.name);
+        b.innerHTML = "<strong></strong><span></span>";
+        b.querySelector("strong").textContent = s.name;
+        b.querySelector("span").textContent = s.desc;
+        b.onclick = () => { state.service = s.name; renderServices(); updateSummary(); };
+        box.appendChild(b);
+      });
+    }
+
+    function renderDates() {
+      const box = $("dates");
+      box.innerHTML = "";
+      if (!state.days.length) { box.innerHTML = '<p class="empty">No dates available right now.</p>'; return; }
+      state.days.forEach(d => {
+        const p = dateParts(d.date);
+        const free = d.slots.some(s => s.left > 0);
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "date";
+        b.disabled = !d.open || !free;
+        b.setAttribute("aria-pressed", state.date === d.date);
+        b.setAttribute("aria-label", p.long + (!d.open ? ", closed" : !free ? ", fully booked" : ""));
+        b.innerHTML = '<div class="dow"></div><div class="day"></div><div class="mon"></div><div class="tag"></div>';
+        b.querySelector(".dow").textContent = p.dow;
+        b.querySelector(".day").textContent = p.day;
+        b.querySelector(".mon").textContent = p.mon;
+        b.querySelector(".tag").textContent = !d.open ? "Closed" : !free ? "Full" : "";
+        b.onclick = () => { state.date = d.date; state.time = null; renderDates(); renderTimes(); updateSummary(); };
+        box.appendChild(b);
+      });
+    }
+
+    function renderTimes() {
+      const box = $("times");
+      const d = currentDay();
+      box.innerHTML = "";
+      if (!d) { box.innerHTML = '<p class="empty">Pick a date first.</p>'; return; }
+      d.slots.forEach(s => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "time";
+        b.disabled = s.left <= 0;
+        b.setAttribute("aria-pressed", state.time === s.start);
+        b.innerHTML = "<strong></strong><span></span>";
+        b.querySelector("strong").textContent = slotLabel(s);
+        b.querySelector("span").textContent = s.left > 0 ? "Available" : "Booked";
+        b.onclick = () => { state.time = s.start; renderTimes(); updateSummary(); };
+        box.appendChild(b);
+      });
+    }
+
+    function updateSummary() {
+      const el = $("summary");
+      const slot = currentSlot();
+      const ready = state.service && slot;
+      $("submitBtn").disabled = !ready;
+      if (!ready) {
+        const missing = [!state.service && "a service", !state.date && "a date", state.date && !slot && "a time"].filter(Boolean);
+        el.className = "summary incomplete";
+        el.textContent = "Still to choose: " + missing.join(", ") + ".";
+        return;
+      }
+      el.className = "summary";
+      el.textContent = state.service + " · " + dateParts(state.date).long + " · " + slotLabel(slot);
+    }
+
+    function show(text, type) { $("msg").textContent = text; $("msg").className = "msg " + (type || ""); }
+
+    async function refresh() {
+      try {
+        await loadAvailability();
+        const d = currentDay();
+        if (d && !(d.open && d.slots.some(s => s.left > 0))) state.date = null;
+        if (!currentSlot() || currentSlot().left <= 0) state.time = null;
+      } catch (e) {
+        $("dates").innerHTML = '<p class="empty">Couldn\'t load available dates. Please refresh the page.</p>';
+        return;
+      }
+      renderDates(); renderTimes(); updateSummary();
+    }
+
+    // ---------- submit ----------
+    $("bookForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      if (!form.checkValidity()) {
+        show("Please fill in your name, phone, address and tick the consent box.", "err");
+        form.reportValidity();
+        return;
+      }
+      const slot = currentSlot();
+      const payload = Object.fromEntries(new FormData(form).entries());
+      Object.assign(payload, { consent: form.consent.checked, service: state.service, date: state.date, time: state.time });
+
+      $("submitBtn").disabled = true;
+      show("Booking your slot…");
+      try {
+        let data;
+        if (demo) {
+          await new Promise(r => setTimeout(r, 700));
+          slot.left -= 1;
+          data = { ok: true, bookingId: "MT-DEMO" + Math.floor(Math.random() * 90 + 10) };
+        } else {
+          const res = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoids a CORS preflight
+            body: JSON.stringify(payload)
+          });
+          data = await res.json();
+        }
+        if (data.ok) {
+          showDone(data.bookingId, payload, slot);
+        } else {
+          show(data.error || "Something went wrong. Please try again.", "err");
+          if (data.code === "SLOT_TAKEN") { state.time = null; await refresh(); }
+        }
+      } catch (err) {
+        show("Couldn't reach the server. Check your connection and try again.", "err");
+      } finally {
+        updateSummary();
+      }
+    });
+
+    function showDone(ref, p, slot) {
+      $("doneRef").textContent = ref;
+      const rows = [["Service", p.service], ["Date", dateParts(p.date).long], ["Arrival", slotLabel(slot)], ["Name", p.name], ["Phone", p.phone]];
+      const dl = $("doneDetails");
+      dl.innerHTML = "";
+      rows.forEach(([k, v]) => {
+        const dt = document.createElement("dt"); dt.textContent = k;
+        const dd = document.createElement("dd"); dd.textContent = v;
+        dl.append(dt, dd);
+      });
+      $("bookingFlow").hidden = true;
+      $("done").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    $("again").onclick = async () => {
+      $("bookForm").reset();
+      Object.assign(state, { service: null, date: null, time: null });
+      show("");
+      $("done").hidden = true;
+      $("bookingFlow").hidden = false;
+      renderServices();
+      await refresh();
+    };
+
+    if (demo) $("demoNote").hidden = false;
+    renderServices();
+    refresh();
+  </script>
+</body>
+</html>
